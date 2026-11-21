@@ -5,6 +5,8 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/catalog.php';
+$catalog = load_catalog($conn);
 
 function rows($conn, $sql, $types = '', $params = []) {
     $stmt = $conn->prepare($sql);
@@ -287,9 +289,9 @@ function page_url($p, $id, $search, $status) {
                 <label>Status <select name="status" id="es-status"><option>Active</option><option>Inactive</option></select></label>
                 <label>First Name <input type="text" name="first_name" id="es-first_name" required></label>
                 <label>Last Name <input type="text" name="last_name" id="es-last_name" required></label>
-                <label>Course <input type="text" name="course" id="es-course"></label>
-                <label>Year Level <input type="number" name="year_level" id="es-year_level" min="1" max="6"></label>
-                <label>Section <input type="text" name="section" id="es-section"></label>
+                <label>Course <select name="course" id="es-course" required></select></label>
+                <label>Year Level <select name="year_level" id="es-year_level" required></select></label>
+                <label>Section <select name="section" id="es-section" required></select></label>
                 <label>Average <input type="number" name="average" id="es-average" step="0.01" min="0" max="100"></label>
                 <div class="modal-actions">
                     <button type="button" class="btn-ghost" data-close>Cancel</button>
@@ -316,11 +318,14 @@ function page_url($p, $id, $search, $status) {
         </div>
     </div>
 
+    <script>window.CATALOG = <?= json_encode($catalog, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;</script>
+    <script src="catalog.js"></script>
     <script>
         const $ = id => document.getElementById(id);
         const show = id => $(id).hidden = false;
         const hide = m => m.hidden = true;
 
+        const EDIT = setupCascade('es-course', 'es-year_level', 'es-section');
         document.querySelectorAll('[data-open]').forEach(btn =>
             btn.addEventListener('click', () => show(btn.dataset.open)));
 
@@ -330,12 +335,10 @@ function page_url($p, $id, $search, $status) {
             $('es-student_id').value = r.student_id;
             $('es-first_name').value = r.first_name;
             $('es-last_name').value = r.last_name;
-            $('es-course').value = r.course || '';
-            $('es-year_level').value = r.year_level;
-            $('es-section').value = r.section || '';
             $('es-status').value = r.status || 'Active';
             $('es-average').value = r.average === null ? '' : r.average;
-            show('editStudentModal');
+            EDIT.preset(r.course || '', r.year_level, r.section || '');
+        show('editStudentModal');
         }));
 
         document.querySelectorAll('[data-view]').forEach(btn => btn.addEventListener('click', () => {
