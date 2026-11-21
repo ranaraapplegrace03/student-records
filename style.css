@@ -602,3 +602,12 @@ html[data-theme="dark"] .flash { border: none; }
 .toast-error { background: #fde8e8; color: #9b1c1c; border: 1px solid #f5b5b5; }
 html[data-theme="dark"] .toast-success { background: #14532d; color: #bbf7d0; border-color: #166534; }
 html[data-theme="dark"] .toast-error { background: #7f1d1d; color: #fecaca; border-color: #991b1b; }
+
+/* ---------- Aligned row actions (View, Edit, Delete on one line) ---------- */
+td:last-child { white-space: nowrap; }
+.actions { display: flex; flex-wrap: nowrap; align-items: center; justify-content: flex-start; gap: 6px; }
+.actions form.inline { display: inline-flex; margin: 0; }
+.actions .btn-view, .actions .btn-edit, .actions .btn-delete {
+  height: 34px; padding: 0 12px; display: inline-flex; align-items: center; justify-content: center;
+  line-height: 1; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap;
+}
