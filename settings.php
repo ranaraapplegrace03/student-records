@@ -242,6 +242,7 @@ $backups = $tab === 'backup' ? backup_files() : [];
     <title>Settings - Student Records</title>
     <link rel="stylesheet" href="style.css">
     <script src="theme.js"></script>
+    <script src="toast.js"></script>
 </head>
 <body class="app">
 
@@ -300,7 +301,7 @@ $backups = $tab === 'backup' ? backup_files() : [];
             </div>
 
             <?php if ($flash): ?>
-                <div class="flash flash-<?= $flash[0] ?>"><?= htmlspecialchars($flash[1]) ?></div>
+                <div class="toast toast-<?= $flash[0] ?>" data-toast><?= htmlspecialchars($flash[1]) ?></div>
             <?php endif; ?>
 
             <div class="settings-layout">
