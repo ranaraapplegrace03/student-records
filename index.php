@@ -17,7 +17,21 @@ function rows($conn, $sql, $types = '', $params = []) {
     return $data;
 }
 
-// Handle add and delete, then redirect so a refresh doesn't resubmit the form
+// Read and check the add/edit form fields
+function read_student_form() {
+    $data = [
+        'student_id' => trim($_POST['student_id'] ?? ''),
+        'first_name' => trim($_POST['first_name'] ?? ''),
+        'last_name'  => trim($_POST['last_name'] ?? ''),
+        'course'     => trim($_POST['course'] ?? ''),
+        'section'    => trim($_POST['section'] ?? ''),
+        'year_level' => (int)($_POST['year_level'] ?? 1),
+    ];
+    $valid = $data['student_id'] !== '' && $data['first_name'] !== '' && $data['last_name'] !== '';
+    return [$data, $valid];
+}
+
+// Handle add, update, and delete, then redirect so a refresh doesn't resubmit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? 'add';
 
@@ -29,18 +43,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ok = $stmt->affected_rows > 0;
         $stmt->close();
         $_SESSION['flash'] = $ok ? ['success', 'Student deleted.'] : ['error', 'Student not found.'];
-    } else {
-        $student_id = trim($_POST['student_id'] ?? '');
-        $first_name = trim($_POST['first_name'] ?? '');
-        $last_name  = trim($_POST['last_name'] ?? '');
-        $course     = trim($_POST['course'] ?? '');
-        $year_level = (int)($_POST['year_level'] ?? 1);
 
-        if ($student_id === '' || $first_name === '' || $last_name === '') {
+    } elseif ($action === 'update') {
+        [$d, $valid] = read_student_form();
+        $id = (int)($_POST['id'] ?? 0);
+        if (!$valid) {
             $_SESSION['flash'] = ['error', 'Student ID, first name, and last name are required.'];
         } else {
-            $stmt = $conn->prepare("INSERT INTO students (student_id, first_name, last_name, course, year_level) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssssi", $student_id, $first_name, $last_name, $course, $year_level);
+            $stmt = $conn->prepare("UPDATE students SET student_id = ?, first_name = ?, last_name = ?, course = ?, section = ?, year_level = ? WHERE id = ?");
+            $stmt->bind_param("sssssii", $d['student_id'], $d['first_name'], $d['last_name'], $d['course'], $d['section'], $d['year_level'], $id);
+            if ($stmt->execute()) {
+                $_SESSION['flash'] = ['success', 'Student updated.'];
+            } else {
+                $_SESSION['flash'] = ['error', 'That Student ID already exists.'];
+            }
+            $stmt->close();
+        }
+
+    } else {
+        [$d, $valid] = read_student_form();
+        if (!$valid) {
+            $_SESSION['flash'] = ['error', 'Student ID, first name, and last name are required.'];
+        } else {
+            $stmt = $conn->prepare("INSERT INTO students (student_id, first_name, last_name, course, section, year_level) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("sssssi", $d['student_id'], $d['first_name'], $d['last_name'], $d['course'], $d['section'], $d['year_level']);
             if ($stmt->execute()) {
                 $_SESSION['flash'] = ['success', 'Student added.'];
             } else {
@@ -69,20 +95,20 @@ $where   = '';
 $types   = '';
 $params  = [];
 if ($search !== '') {
-    $where  = "WHERE student_id LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR course LIKE ?";
+    $where  = "WHERE student_id LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR course LIKE ? OR section LIKE ?";
     $like   = "%" . $search . "%";
-    $types  = 'ssss';
-    $params = [$like, $like, $like, $like];
+    $types  = 'sssss';
+    $params = [$like, $like, $like, $like, $like];
 }
 
-$total = rows($conn, "SELECT COUNT(*) AS c FROM students $where", $types, $params)[0]['c'];
-$pages = max(1, (int)ceil($total / $perPage));
-$page  = min(max(1, (int)($_GET['page'] ?? 1)), $pages);
+$total  = rows($conn, "SELECT COUNT(*) AS c FROM students $where", $types, $params)[0]['c'];
+$pages  = max(1, (int)ceil($total / $perPage));
+$page   = min(max(1, (int)($_GET['page'] ?? 1)), $pages);
 $offset = ($page - 1) * $perPage;
 
 $students = rows(
     $conn,
-    "SELECT id, student_id, first_name, last_name, course, year_level FROM students $where ORDER BY last_name, first_name LIMIT $perPage OFFSET $offset",
+    "SELECT id, student_id, first_name, last_name, course, section, year_level FROM students $where ORDER BY last_name, first_name LIMIT $perPage OFFSET $offset",
     $types,
     $params
 );
@@ -189,21 +215,10 @@ function page_url($p, $search) {
             <div class="toolbar">
                 <form method="get" class="search-form">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#7a8294" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-                    <input type="text" name="search" placeholder="Search by Student ID, name, or course"
+                    <input type="text" name="search" placeholder="Search by Student ID, name, course, or section"
                            value="<?= htmlspecialchars($search) ?>">
                 </form>
-                <details class="add-details">
-                    <summary class="btn-primary">+ Add Student</summary>
-                    <form method="post" class="add-form">
-                        <input type="hidden" name="action" value="add">
-                        <input type="text" name="student_id" placeholder="Student ID" required>
-                        <input type="text" name="first_name" placeholder="First Name" required>
-                        <input type="text" name="last_name" placeholder="Last Name" required>
-                        <input type="text" name="course" placeholder="Course">
-                        <input type="number" name="year_level" value="1" min="1" max="6" title="Year Level">
-                        <button type="submit" class="btn-primary">Save</button>
-                    </form>
-                </details>
+                <button type="button" class="btn-primary" data-open="addModal">+ Add Student</button>
             </div>
 
             <section class="card">
@@ -211,25 +226,30 @@ function page_url($p, $search) {
                 <table>
                     <thead>
                         <tr>
-                            <th>Student ID</th><th>Name</th><th>Course</th><th>Year Level</th><th>Actions</th>
+                            <th>Student ID</th><th>Name</th><th>Course</th><th>Section</th><th>Year Level</th><th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                     <?php if (!$students): ?>
-                        <tr><td colspan="5" class="empty">No student records found.</td></tr>
+                        <tr><td colspan="6" class="empty">No student records found.</td></tr>
                     <?php endif; ?>
                     <?php foreach ($students as $row): ?>
                         <tr>
                             <td><?= htmlspecialchars($row['student_id']) ?></td>
                             <td><?= htmlspecialchars($row['last_name'] . ', ' . $row['first_name']) ?></td>
                             <td><?= htmlspecialchars($row['course']) ?></td>
+                            <td><?= htmlspecialchars($row['section']) ?></td>
                             <td><?= htmlspecialchars($row['year_level']) ?></td>
                             <td>
-                                <form method="post" onsubmit="return confirm('Delete this student record?');" class="inline">
-                                    <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
-                                    <button type="submit" class="btn-delete">Delete</button>
-                                </form>
+                                <div class="actions">
+                                    <button type="button" class="btn-view" data-view="<?= htmlspecialchars(json_encode($row), ENT_QUOTES) ?>">View</button>
+                                    <button type="button" class="btn-edit" data-edit="<?= htmlspecialchars(json_encode($row), ENT_QUOTES) ?>">Edit</button>
+                                    <form method="post" onsubmit="return confirm('Delete this student record?');" class="inline">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
+                                        <button type="submit" class="btn-delete">Delete</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -257,5 +277,114 @@ function page_url($p, $search) {
             </section>
         </main>
     </div>
+
+    <!-- Add Student modal -->
+    <div class="modal" id="addModal" hidden>
+        <div class="modal-box">
+            <div class="modal-head">
+                <h3>Add Student</h3>
+                <button type="button" class="modal-close" data-close aria-label="Close">&times;</button>
+            </div>
+            <form method="post" class="modal-form">
+                <input type="hidden" name="action" value="add">
+                <label>Student ID <input type="text" name="student_id" required></label>
+                <label>Year Level <input type="number" name="year_level" value="1" min="1" max="6"></label>
+                <label>First Name <input type="text" name="first_name" required></label>
+                <label>Last Name <input type="text" name="last_name" required></label>
+                <label>Course <input type="text" name="course"></label>
+                <label>Section <input type="text" name="section"></label>
+                <div class="modal-actions">
+                    <button type="button" class="btn-ghost" data-close>Cancel</button>
+                    <button type="submit" class="btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Student modal -->
+    <div class="modal" id="editModal" hidden>
+        <div class="modal-box">
+            <div class="modal-head">
+                <h3>Edit Student</h3>
+                <button type="button" class="modal-close" data-close aria-label="Close">&times;</button>
+            </div>
+            <form method="post" class="modal-form">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="id" id="edit-id">
+                <label>Student ID <input type="text" name="student_id" id="edit-student_id" required></label>
+                <label>Year Level <input type="number" name="year_level" id="edit-year_level" min="1" max="6"></label>
+                <label>First Name <input type="text" name="first_name" id="edit-first_name" required></label>
+                <label>Last Name <input type="text" name="last_name" id="edit-last_name" required></label>
+                <label>Course <input type="text" name="course" id="edit-course"></label>
+                <label>Section <input type="text" name="section" id="edit-section"></label>
+                <div class="modal-actions">
+                    <button type="button" class="btn-ghost" data-close>Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Student modal -->
+    <div class="modal" id="viewModal" hidden>
+        <div class="modal-box">
+            <div class="modal-head">
+                <h3>Student Details</h3>
+                <button type="button" class="modal-close" data-close aria-label="Close">&times;</button>
+            </div>
+            <dl class="details">
+                <div><dt>Student ID</dt><dd id="view-student_id"></dd></div>
+                <div><dt>Name</dt><dd id="view-name"></dd></div>
+                <div><dt>Course</dt><dd id="view-course"></dd></div>
+                <div><dt>Section</dt><dd id="view-section"></dd></div>
+                <div><dt>Year Level</dt><dd id="view-year_level"></dd></div>
+            </dl>
+            <div class="modal-actions">
+                <button type="button" class="btn-ghost" data-close>Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const show = id => document.getElementById(id).hidden = false;
+        const hide = modal => modal.hidden = true;
+
+        document.querySelectorAll('[data-open]').forEach(btn =>
+            btn.addEventListener('click', () => show(btn.dataset.open)));
+
+        document.querySelectorAll('[data-edit]').forEach(btn =>
+            btn.addEventListener('click', () => {
+                const r = JSON.parse(btn.dataset.edit);
+                document.getElementById('edit-id').value = r.id;
+                document.getElementById('edit-student_id').value = r.student_id;
+                document.getElementById('edit-first_name').value = r.first_name;
+                document.getElementById('edit-last_name').value = r.last_name;
+                document.getElementById('edit-course').value = r.course || '';
+                document.getElementById('edit-section').value = r.section || '';
+                document.getElementById('edit-year_level').value = r.year_level;
+                show('editModal');
+            }));
+
+        document.querySelectorAll('[data-view]').forEach(btn =>
+            btn.addEventListener('click', () => {
+                const r = JSON.parse(btn.dataset.view);
+                document.getElementById('view-student_id').textContent = r.student_id;
+                document.getElementById('view-name').textContent = r.last_name + ', ' + r.first_name;
+                document.getElementById('view-course').textContent = r.course || '-';
+                document.getElementById('view-section').textContent = r.section || '-';
+                document.getElementById('view-year_level').textContent = r.year_level;
+                show('viewModal');
+            }));
+
+        // Close on the X or Cancel button, or by clicking the dark background
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', e => {
+                if (e.target === modal || e.target.closest('[data-close]')) hide(modal);
+            });
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') document.querySelectorAll('.modal').forEach(hide);
+        });
+    </script>
 </body>
 </html>
