@@ -268,7 +268,6 @@ function page_url($p, $id, $search, $status) {
                 <label>Status <select name="status"><option>Active</option><option>Inactive</option></select></label>
                 <label>First Name <input type="text" name="first_name" required></label>
                 <label>Last Name <input type="text" name="last_name" required></label>
-                <label class="full">Average <input type="number" name="average" step="0.01" min="0" max="100"></label>
                 <div class="modal-actions">
                     <button type="button" class="btn-ghost" data-close>Cancel</button>
                     <button type="submit" class="btn-primary">Save</button>
