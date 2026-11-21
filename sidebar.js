@@ -1,6 +1,8 @@
 // Resizable sidebar: drag its right edge to make it thinner or wider. Double-click the edge to reset.
 (function () {
-    var MIN = 72, MAX = 360, DEFAULT = 250, NARROW_AT = 160, KEY = 'sr_sidebar_w';
+    var MIN = 72, MAX = 360, NARROW_AT = 160, KEY = 'sr_sidebar_w';
+    // Smaller screens start with a narrower sidebar
+    var DEFAULT = window.innerWidth < 1200 ? 200 : 250;
 
     function apply(w) {
         w = Math.max(MIN, Math.min(MAX, Math.round(w)));
