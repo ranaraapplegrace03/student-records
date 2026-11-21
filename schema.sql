@@ -18,3 +18,27 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL
 );
+
+-- Courses, year levels, and sections
+CREATE TABLE IF NOT EXISTS courses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    status VARCHAR(10) NOT NULL DEFAULT 'Active'
+);
+
+CREATE TABLE IF NOT EXISTS course_years (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course_id INT NOT NULL,
+    year_level INT NOT NULL,
+    UNIQUE KEY uniq_course_year (course_id, year_level),
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS sections (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course_year_id INT NOT NULL,
+    name VARCHAR(30) NOT NULL,
+    UNIQUE KEY uniq_section (course_year_id, name),
+    FOREIGN KEY (course_year_id) REFERENCES course_years(id) ON DELETE CASCADE
+);
