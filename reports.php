@@ -154,6 +154,7 @@ $exportUrl = 'reports.php?' . http_build_query(array_merge(['export' => 'csv'], 
     <title>Reports - Student Records</title>
     <link rel="stylesheet" href="style.css">
     <script src="theme.js"></script>
+    <script src="sidebar.js"></script>
 </head>
 <body class="app">
 
