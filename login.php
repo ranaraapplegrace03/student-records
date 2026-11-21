@@ -56,6 +56,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h2>Student Records System</h2>
         <p class="sub">Sign in to your account</p>
 
+        <?php if (isset($_GET['reset'])): ?>
+            <div class="success">Password changed. You can log in now.</div>
+        <?php endif; ?>
+
         <?php if (isset($_GET['registered'])): ?>
             <div class="success">Account created. You can log in now.</div>
         <?php endif; ?>
@@ -86,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" class="login-btn">Log In</button>
         </form>
 
+        <p class="back-link"><a href="forgot.php">Forgot password?</a></p>
         <div class="divider">or</div>
         <a class="secondary-btn" href="register.php">Create Account</a>
     </div>
