@@ -198,12 +198,12 @@ function page_url($p, $id, $search, $status) {
                 <table>
                     <thead>
                         <tr>
-                            <th>#</th><th>Student ID</th><th>Name</th><th>Course</th><th>Year Level</th><th>Section</th><th>Status</th><th>Average</th><th>Actions</th>
+                            <th>#</th><th>Student ID</th><th>Name</th><th>Course</th><th>Year Level</th><th>Section</th><th>Status</th><th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                     <?php if (!$students): ?>
-                        <tr><td colspan="9" class="empty">No students in this section yet. Click "+ Add Student" to add one.</td></tr>
+                        <tr><td colspan="8" class="empty">No students in this section yet. Click "+ Add Student" to add one.</td></tr>
                     <?php endif; ?>
                     <?php foreach ($students as $i => $row): ?>
                         <tr>
@@ -214,7 +214,6 @@ function page_url($p, $id, $search, $status) {
                             <td>Year <?= htmlspecialchars($row['year_level']) ?></td>
                             <td><?= htmlspecialchars($row['section']) ?></td>
                             <td><span class="badge <?= $row['status'] === 'Inactive' ? 'badge-inactive' : 'badge-active' ?>"><?= htmlspecialchars($row['status']) ?></span></td>
-                            <td><?= $row['average'] === null ? '-' : number_format((float)$row['average'], 2) ?></td>
                             <td>
                                 <div class="actions">
                                     <button type="button" class="btn-view" data-view="<?= htmlspecialchars(json_encode($row), ENT_QUOTES) ?>">View</button>
@@ -291,7 +290,6 @@ function page_url($p, $id, $search, $status) {
                 <label>Course <select name="course" id="es-course" required></select></label>
                 <label>Year Level <select name="year_level" id="es-year_level" required></select></label>
                 <label>Section <select name="section" id="es-section" required></select></label>
-                <label>Average <input type="number" name="average" id="es-average" step="0.01" min="0" max="100"></label>
                 <div class="modal-actions">
                     <button type="button" class="btn-ghost" data-close>Cancel</button>
                     <button type="submit" class="btn-primary">Save Changes</button>
@@ -311,7 +309,6 @@ function page_url($p, $id, $search, $status) {
                 <div><dt>Year Level</dt><dd id="vs-year_level"></dd></div>
                 <div><dt>Section</dt><dd id="vs-section"></dd></div>
                 <div><dt>Status</dt><dd id="vs-status"></dd></div>
-                <div><dt>Average</dt><dd id="vs-average"></dd></div>
             </dl>
             <div class="modal-actions"><button type="button" class="btn-ghost" data-close>Close</button></div>
         </div>
@@ -335,7 +332,6 @@ function page_url($p, $id, $search, $status) {
             $('es-first_name').value = r.first_name;
             $('es-last_name').value = r.last_name;
             $('es-status').value = r.status || 'Active';
-            $('es-average').value = r.average === null ? '' : r.average;
             EDIT.preset(r.course || '', r.year_level, r.section || '');
         show('editStudentModal');
         }));
@@ -348,7 +344,6 @@ function page_url($p, $id, $search, $status) {
             $('vs-year_level').textContent = 'Year ' + r.year_level;
             $('vs-section').textContent = r.section || '-';
             $('vs-status').textContent = r.status || 'Active';
-            $('vs-average').textContent = r.average === null ? '-' : Number(r.average).toFixed(2);
             show('viewStudentModal');
         }));
 
