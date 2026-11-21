@@ -1,4 +1,10 @@
 <?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
+
 require_once __DIR__ . '/db.php';
 
 $message = '';
@@ -39,44 +45,58 @@ if ($search !== '') {
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Student Records</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <h2>Student Records</h2>
+<body class="dashboard">
+    <header class="topbar">
+        <span class="topbar-title">Student Records System</span>
+        <span class="topbar-user">
+            Signed in as <strong><?= htmlspecialchars($_SESSION['username']) ?></strong>
+            <a href="logout.php">Log out</a>
+        </span>
+    </header>
 
-    <?php if ($message !== ''): ?>
-        <p><strong><?= htmlspecialchars($message) ?></strong></p>
-    <?php endif; ?>
+    <main class="content">
+        <?php if ($message !== ''): ?>
+            <p class="notice"><?= htmlspecialchars($message) ?></p>
+        <?php endif; ?>
 
-    <form method="post">
-        Student ID: <input type="text" name="student_id" required>
-        First Name: <input type="text" name="first_name" required>
-        Last Name: <input type="text" name="last_name" required>
-        Course: <input type="text" name="course">
-        Year Level: <input type="number" name="year_level" value="1" min="1" max="6">
-        <button type="submit">Add Student</button>
-    </form>
+        <section class="panel">
+            <h3>Add Student</h3>
+            <form method="post" class="inline-form">
+                <input type="text" name="student_id" placeholder="Student ID" required>
+                <input type="text" name="first_name" placeholder="First Name" required>
+                <input type="text" name="last_name" placeholder="Last Name" required>
+                <input type="text" name="course" placeholder="Course">
+                <input type="number" name="year_level" value="1" min="1" max="6" title="Year Level">
+                <button type="submit" class="btn">Add Student</button>
+            </form>
+        </section>
 
-    <br>
-    <form method="get">
-        Search (Student ID, last name, or course): <input type="text" name="search" value="<?= htmlspecialchars($search) ?>">
-        <button type="submit">Search</button>
-        <a href="index.php">Clear</a>
-    </form>
+        <section class="panel">
+            <form method="get" class="inline-form">
+                <input type="text" name="search" placeholder="Search by Student ID, last name, or course"
+                       value="<?= htmlspecialchars($search) ?>">
+                <button type="submit" class="btn">Search</button>
+                <a href="index.php" class="clear">Clear</a>
+            </form>
 
-    <br>
-    <table border="1" cellpadding="4">
-        <tr><th>ID</th><th>Student ID</th><th>First Name</th><th>Last Name</th><th>Course</th><th>Year Level</th></tr>
-        <?php while ($row = $result->fetch_assoc()): ?>
-        <tr>
-            <td><?= htmlspecialchars($row['id']) ?></td>
-            <td><?= htmlspecialchars($row['student_id']) ?></td>
-            <td><?= htmlspecialchars($row['first_name']) ?></td>
-            <td><?= htmlspecialchars($row['last_name']) ?></td>
-            <td><?= htmlspecialchars($row['course']) ?></td>
-            <td><?= htmlspecialchars($row['year_level']) ?></td>
-        </tr>
-        <?php endwhile; ?>
-    </table>
+            <table>
+                <tr><th>ID</th><th>Student ID</th><th>First Name</th><th>Last Name</th><th>Course</th><th>Year Level</th></tr>
+                <?php while ($row = $result->fetch_assoc()): ?>
+                <tr>
+                    <td><?= htmlspecialchars($row['id']) ?></td>
+                    <td><?= htmlspecialchars($row['student_id']) ?></td>
+                    <td><?= htmlspecialchars($row['first_name']) ?></td>
+                    <td><?= htmlspecialchars($row['last_name']) ?></td>
+                    <td><?= htmlspecialchars($row['course']) ?></td>
+                    <td><?= htmlspecialchars($row['year_level']) ?></td>
+                </tr>
+                <?php endwhile; ?>
+            </table>
+        </section>
+    </main>
 </body>
 </html>
