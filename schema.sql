@@ -8,8 +8,10 @@ CREATE TABLE IF NOT EXISTS students (
     year_level INT DEFAULT 1
 );
 
--- Adds the section column to a students table created before this change
+-- These add columns to a students table created before this change
 ALTER TABLE students ADD COLUMN IF NOT EXISTS section VARCHAR(20) AFTER course;
+ALTER TABLE students ADD COLUMN IF NOT EXISTS status VARCHAR(10) NOT NULL DEFAULT 'Active' AFTER section;
+ALTER TABLE students ADD COLUMN IF NOT EXISTS average DECIMAL(5,2) NULL AFTER status;
 
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
