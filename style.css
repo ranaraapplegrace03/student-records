@@ -291,3 +291,9 @@ td.empty { text-align: center; color: #7a8294; padding: 26px; }
 @media (max-width: 900px) {
   .year-row { grid-template-columns: 1fr; }
 }
+
+/* ---------- Popup form layout ---------- */
+.modal-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.modal-form label { min-width: 0; }
+.modal-form input, .modal-form select { width: 100%; min-width: 0; text-overflow: ellipsis; }
+.modal-form label:has(> select[name="course"]) { grid-column: 1 / -1; }
