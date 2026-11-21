@@ -195,6 +195,7 @@ function page_url($p, $search, $status) {
     <title>Courses - Student Records</title>
     <link rel="stylesheet" href="style.css">
     <script src="theme.js"></script>
+    <script src="toast.js"></script>
 </head>
 <body class="app">
 
@@ -253,7 +254,7 @@ function page_url($p, $search, $status) {
             </div>
 
             <?php if ($flash): ?>
-                <div class="flash flash-<?= $flash[0] ?>"><?= htmlspecialchars($flash[1]) ?></div>
+                <div class="toast toast-<?= $flash[0] ?>" data-toast><?= htmlspecialchars($flash[1]) ?></div>
             <?php endif; ?>
 
             <div class="toolbar">
