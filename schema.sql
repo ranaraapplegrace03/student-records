@@ -19,6 +19,10 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL
 );
 
+-- Account details for the Settings page
+ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(100) NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) NULL;
+
 -- Courses, year levels, and sections
 CREATE TABLE IF NOT EXISTS courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -41,4 +45,10 @@ CREATE TABLE IF NOT EXISTS sections (
     name VARCHAR(30) NOT NULL,
     UNIQUE KEY uniq_section (course_year_id, name),
     FOREIGN KEY (course_year_id) REFERENCES course_years(id) ON DELETE CASCADE
+);
+
+-- System settings (key and value pairs)
+CREATE TABLE IF NOT EXISTS settings (
+    setting_key VARCHAR(50) PRIMARY KEY,
+    setting_value VARCHAR(255) NULL
 );
