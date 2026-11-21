@@ -5,6 +5,7 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/notify.php';
 require_once __DIR__ . '/catalog.php';
 $catalog = load_catalog($conn);
 
@@ -129,6 +130,7 @@ function page_url($p, $search) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Student Records</title>
     <link rel="stylesheet" href="style.css">
+    <script src="theme.js"></script>
 </head>
 <body class="app">
 
@@ -166,6 +168,7 @@ function page_url($p, $search) {
 
     <div class="main">
         <header class="topbar">
+            <?php render_notifications($conn); ?>
             <div class="user-menu">
                 <span class="avatar"><?= htmlspecialchars(strtoupper(substr($_SESSION['username'], 0, 1))) ?></span>
                 <strong><?= htmlspecialchars($_SESSION['username']) ?></strong>
