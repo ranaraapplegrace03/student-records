@@ -5,6 +5,7 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/notify.php';
 
 function rows($conn, $sql, $types = '', $params = []) {
     $stmt = $conn->prepare($sql);
@@ -152,6 +153,7 @@ $exportUrl = 'reports.php?' . http_build_query(array_merge(['export' => 'csv'], 
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Reports - Student Records</title>
     <link rel="stylesheet" href="style.css">
+    <script src="theme.js"></script>
 </head>
 <body class="app">
 
@@ -192,6 +194,7 @@ $exportUrl = 'reports.php?' . http_build_query(array_merge(['export' => 'csv'], 
 
     <div class="main">
         <header class="topbar">
+            <?php render_notifications($conn); ?>
             <div class="user-menu">
                 <span class="avatar"><?= htmlspecialchars(strtoupper(substr($_SESSION['username'], 0, 1))) ?></span>
                 <strong><?= htmlspecialchars($_SESSION['username']) ?></strong>
