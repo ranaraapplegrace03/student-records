@@ -588,3 +588,17 @@ html[data-theme="dark"] .switch .slider { background: #334155; }
 html[data-theme="dark"] .switch input:checked + .slider { background: #1f5fd6; }
 html[data-theme="dark"] .setting-row { border-bottom-color: #1e293b; }
 html[data-theme="dark"] .flash { border: none; }
+
+/* ---------- Toast feedback (top center, 2 seconds) ---------- */
+.toast {
+  position: fixed; top: 20px; left: 50%; transform: translate(-50%, -160%); opacity: 0;
+  transition: transform 0.4s ease, opacity 0.4s ease; z-index: 200;
+  min-width: 260px; max-width: 90vw; padding: 14px 24px; border-radius: 12px;
+  font-size: 15px; font-weight: 600; text-align: center; box-shadow: 0 12px 30px rgba(10, 40, 120, 0.18);
+  pointer-events: none;
+}
+.toast.show { transform: translate(-50%, 0); opacity: 1; }
+.toast-success { background: #e6f4ea; color: #1e6b34; border: 1px solid #b7e1c1; }
+.toast-error { background: #fde8e8; color: #9b1c1c; border: 1px solid #f5b5b5; }
+html[data-theme="dark"] .toast-success { background: #14532d; color: #bbf7d0; border-color: #166534; }
+html[data-theme="dark"] .toast-error { background: #7f1d1d; color: #fecaca; border-color: #991b1b; }
