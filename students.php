@@ -288,7 +288,6 @@ function page_url($p, $search, $level) {
                 <label>Status
                     <select name="status"><option>Active</option><option>Inactive</option></select>
                 </label>
-                <label>Average <input type="number" name="average" step="0.01" min="0" max="100"></label>
                 <div class="modal-actions">
                     <button type="button" class="btn-ghost" data-close>Cancel</button>
                     <button type="submit" class="btn-primary">Save</button>
@@ -317,10 +316,10 @@ function page_url($p, $search, $level) {
                 <label>Last Name <input type="text" name="last_name" id="edit-last_name" required></label>
                 <label>Course <select name="course" id="edit-course" required></select></label>
                 <label>Section <select name="section" id="edit-section" required></select></label>
+                <label>Average <input type="number" name="average" id="edit-average" step="0.01" min="0" max="100"></label>
                 <label>Status
                     <select name="status" id="edit-status"><option>Active</option><option>Inactive</option></select>
                 </label>
-                <label>Average <input type="number" name="average" id="edit-average" step="0.01" min="0" max="100"></label>
                 <div class="modal-actions">
                     <button type="button" class="btn-ghost" data-close>Cancel</button>
                     <button type="submit" class="btn-primary">Save Changes</button>
