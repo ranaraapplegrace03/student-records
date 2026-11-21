@@ -209,12 +209,12 @@ function page_url($p, $search, $level) {
                 <table>
                     <thead>
                         <tr>
-                            <th>Student ID</th><th>Name</th><th>Year Level</th><th>Section</th><th>Status</th><th>Average</th><th>Actions</th>
+                            <th>Student ID</th><th>Name</th><th>Year Level</th><th>Section</th><th>Status</th><th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                     <?php if (!$students): ?>
-                        <tr><td colspan="7" class="empty">No student records found.</td></tr>
+                        <tr><td colspan="6" class="empty">No student records found.</td></tr>
                     <?php endif; ?>
                     <?php foreach ($students as $row): ?>
                         <tr>
@@ -227,7 +227,6 @@ function page_url($p, $search, $level) {
                                     <?= htmlspecialchars($row['status']) ?>
                                 </span>
                             </td>
-                            <td><?= $row['average'] === null ? '-' : number_format((float)$row['average'], 2) ?></td>
                             <td>
                                 <div class="actions">
                                     <button type="button" class="btn-view" data-view="<?= htmlspecialchars(json_encode($row), ENT_QUOTES) ?>">View</button>
@@ -316,7 +315,6 @@ function page_url($p, $search, $level) {
                 <label>Last Name <input type="text" name="last_name" id="edit-last_name" required></label>
                 <label>Course <select name="course" id="edit-course" required></select></label>
                 <label>Section <select name="section" id="edit-section" required></select></label>
-                <label>Average <input type="number" name="average" id="edit-average" step="0.01" min="0" max="100"></label>
                 <label>Status
                     <select name="status" id="edit-status"><option>Active</option><option>Inactive</option></select>
                 </label>
@@ -342,7 +340,6 @@ function page_url($p, $search, $level) {
                 <div><dt>Section</dt><dd id="view-section"></dd></div>
                 <div><dt>Year Level</dt><dd id="view-year_level"></dd></div>
                 <div><dt>Status</dt><dd id="view-status"></dd></div>
-                <div><dt>Average</dt><dd id="view-average"></dd></div>
             </dl>
             <div class="modal-actions">
                 <button type="button" class="btn-ghost" data-close>Close</button>
@@ -372,7 +369,6 @@ function page_url($p, $search, $level) {
                 set('edit-first_name', r.first_name);
                 set('edit-last_name', r.last_name);
                 set('edit-status', r.status || 'Active');
-                set('edit-average', r.average === null ? '' : r.average);
                 EDIT.preset(r.course || '', r.year_level, r.section || '');
         show('editModal');
             }));
@@ -386,7 +382,6 @@ function page_url($p, $search, $level) {
                 text('view-section', r.section || '-');
                 text('view-year_level', 'Year ' + r.year_level);
                 text('view-status', r.status || 'Active');
-                text('view-average', r.average === null ? '-' : Number(r.average).toFixed(2));
                 show('viewModal');
             }));
 
