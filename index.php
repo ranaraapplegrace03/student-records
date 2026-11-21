@@ -5,6 +5,8 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/catalog.php';
+$catalog = load_catalog($conn);
 
 function rows($conn, $sql, $types = '', $params = []) {
     $stmt = $conn->prepare($sql);
@@ -289,11 +291,11 @@ function page_url($p, $search) {
             <form method="post" class="modal-form">
                 <input type="hidden" name="action" value="add">
                 <label>Student ID <input type="text" name="student_id" required></label>
-                <label>Year Level <input type="number" name="year_level" value="1" min="1" max="6"></label>
+                <label>Year Level <select name="year_level" id="add-year_level" required></select></label>
                 <label>First Name <input type="text" name="first_name" required></label>
                 <label>Last Name <input type="text" name="last_name" required></label>
-                <label>Course <input type="text" name="course"></label>
-                <label>Section <input type="text" name="section"></label>
+                <label>Course <select name="course" id="add-course" required></select></label>
+                <label>Section <select name="section" id="add-section" required></select></label>
                 <div class="modal-actions">
                     <button type="button" class="btn-ghost" data-close>Cancel</button>
                     <button type="submit" class="btn-primary">Save</button>
@@ -313,11 +315,11 @@ function page_url($p, $search) {
                 <input type="hidden" name="action" value="update">
                 <input type="hidden" name="id" id="edit-id">
                 <label>Student ID <input type="text" name="student_id" id="edit-student_id" required></label>
-                <label>Year Level <input type="number" name="year_level" id="edit-year_level" min="1" max="6"></label>
+                <label>Year Level <select name="year_level" id="edit-year_level" required></select></label>
                 <label>First Name <input type="text" name="first_name" id="edit-first_name" required></label>
                 <label>Last Name <input type="text" name="last_name" id="edit-last_name" required></label>
-                <label>Course <input type="text" name="course" id="edit-course"></label>
-                <label>Section <input type="text" name="section" id="edit-section"></label>
+                <label>Course <select name="course" id="edit-course" required></select></label>
+                <label>Section <select name="section" id="edit-section" required></select></label>
                 <div class="modal-actions">
                     <button type="button" class="btn-ghost" data-close>Cancel</button>
                     <button type="submit" class="btn-primary">Save Changes</button>
@@ -346,10 +348,15 @@ function page_url($p, $search) {
         </div>
     </div>
 
+    <script>window.CATALOG = <?= json_encode($catalog, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;</script>
+    <script src="catalog.js"></script>
     <script>
         const show = id => document.getElementById(id).hidden = false;
         const hide = modal => modal.hidden = true;
 
+        const ADD = setupCascade('add-course', 'add-year_level', 'add-section');
+        const EDIT = setupCascade('edit-course', 'edit-year_level', 'edit-section');
+        ADD.reset();
         document.querySelectorAll('[data-open]').forEach(btn =>
             btn.addEventListener('click', () => show(btn.dataset.open)));
 
@@ -360,10 +367,8 @@ function page_url($p, $search) {
                 document.getElementById('edit-student_id').value = r.student_id;
                 document.getElementById('edit-first_name').value = r.first_name;
                 document.getElementById('edit-last_name').value = r.last_name;
-                document.getElementById('edit-course').value = r.course || '';
-                document.getElementById('edit-section').value = r.section || '';
-                document.getElementById('edit-year_level').value = r.year_level;
-                show('editModal');
+                EDIT.preset(r.course || '', r.year_level, r.section || '');
+        show('editModal');
             }));
 
         document.querySelectorAll('[data-view]').forEach(btn =>
