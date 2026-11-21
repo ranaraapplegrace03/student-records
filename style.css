@@ -178,3 +178,48 @@ td.empty { text-align: center; color: #7a8294; padding: 26px; }
   .stats { grid-template-columns: 1fr; }
   .add-form { position: static; width: 100%; margin-top: 10px; }
 }
+
+/* ---------- Modals and row actions ---------- */
+.modal {
+  position: fixed; inset: 0; background: rgba(8, 20, 45, 0.55);
+  display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px;
+}
+.modal[hidden] { display: none; }
+.modal-box {
+  background: #fff; border-radius: 18px; width: 100%; max-width: 560px; padding: 26px 28px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.modal-head h3 { margin: 0; font-size: 22px; color: #0b1f4a; }
+.modal-close { background: none; border: none; font-size: 28px; line-height: 1; cursor: pointer; color: #5b6478; }
+.modal-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.modal-form label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #3b4a66; font-weight: 600; }
+.modal-form input {
+  height: 44px; border: 1px solid #d6dcea; border-radius: 8px; padding: 0 12px; font-size: 15px; font-weight: 400;
+}
+.modal-form input:focus { outline: none; border-color: #1f6fe8; box-shadow: 0 0 0 3px rgba(31, 111, 232, 0.15); }
+.modal-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+.modal .btn-primary { height: 44px; padding: 0 22px; }
+.btn-ghost {
+  height: 44px; padding: 0 22px; border: 1px solid #d6dcea; border-radius: 10px;
+  background: #fff; cursor: pointer; font-size: 15px; color: #1d2433;
+}
+.btn-ghost:hover { background: #f4f7fc; }
+
+.details { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; margin: 0 0 20px; }
+.details dt { font-size: 13px; color: #7a8294; }
+.details dd { margin: 3px 0 0; font-size: 16px; color: #0b1f4a; font-weight: 600; }
+
+.actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.actions .inline { display: inline; }
+.btn-view, .btn-edit {
+  border: none; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.btn-view { background: #e4eefd; color: #1f5fd6; }
+.btn-view:hover { background: #d4e4fb; }
+.btn-edit { background: #fdf3df; color: #b45309; }
+.btn-edit:hover { background: #fae9c4; }
+
+@media (max-width: 560px) {
+  .modal-form, .details { grid-template-columns: 1fr; }
+}
