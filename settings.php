@@ -5,6 +5,10 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/notify.php';
+
+// Backups are kept outside the web folder so they can't be opened from a browser
+const BACKUP_DIR = '/var/www/student-backups';
 
 function rows($conn, $sql, $types = '', $params = []) {
     $stmt = $conn->prepare($sql);
@@ -17,6 +21,57 @@ function rows($conn, $sql, $types = '', $params = []) {
     return $data;
 }
 
+function set_flash($type, $msg) {
+    $_SESSION['flash'] = [$type, $msg];
+}
+
+function build_backup($conn) {
+    return [
+        'app'          => 'Student Records System',
+        'created'      => date('c'),
+        'courses'      => rows($conn, "SELECT code, name, status FROM courses"),
+        'course_years' => rows($conn, "SELECT c.code AS course_code, cy.year_level FROM course_years cy JOIN courses c ON c.id = cy.course_id"),
+        'sections'     => rows($conn, "SELECT c.code AS course_code, cy.year_level, s.name FROM sections s JOIN course_years cy ON cy.id = s.course_year_id JOIN courses c ON c.id = cy.course_id"),
+        'students'     => rows($conn, "SELECT student_id, first_name, last_name, course, section, year_level, status FROM students"),
+        'settings'     => rows($conn, "SELECT setting_key, setting_value FROM settings"),
+    ];
+}
+
+function backup_files() {
+    if (!is_dir(BACKUP_DIR)) return [];
+    $files = glob(BACKUP_DIR . '/StudentRecords_Backup_*.json') ?: [];
+    usort($files, fn($a, $b) => filemtime($b) <=> filemtime($a));
+    return $files;
+}
+
+function valid_backup_name($name) {
+    return (bool)preg_match('/^StudentRecords_Backup_[0-9_\-]+\.json$/', $name);
+}
+
+function human_size($bytes) {
+    if ($bytes >= 1048576) return number_format($bytes / 1048576, 1) . ' MB';
+    return number_format($bytes / 1024, 1) . ' KB';
+}
+
+$tabs = ['account' => 'Account', 'system' => 'System', 'backup' => 'Backup & Restore', 'about' => 'About'];
+$uid = (int)$_SESSION['user_id'];
+
+// Download a saved backup
+if (isset($_GET['download'])) {
+    $name = basename((string)$_GET['download']);
+    $path = BACKUP_DIR . '/' . $name;
+    if (valid_backup_name($name) && is_file($path)) {
+        header('Content-Type: application/json; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $name . '"');
+        header('Content-Length: ' . filesize($path));
+        readfile($path);
+        exit;
+    }
+    set_flash('error', 'That backup file was not found.');
+    header("Location: settings.php?tab=backup");
+    exit;
+}
+
 $defaults = [
     'school_name'       => 'Student Records System',
     'academic_term'     => 'SY 2026 - 2027',
@@ -27,30 +82,6 @@ $defaults = [
 $cfg = $defaults;
 foreach (rows($conn, "SELECT setting_key, setting_value FROM settings") as $r) {
     $cfg[$r['setting_key']] = $r['setting_value'];
-}
-
-$tabs = ['account' => 'Account', 'system' => 'System', 'backup' => 'Backup & Restore', 'about' => 'About'];
-$uid = (int)$_SESSION['user_id'];
-
-// Backup download (JSON file)
-if (($_GET['action'] ?? '') === 'backup') {
-    $backup = [
-        'app'          => 'Student Records System',
-        'created'      => date('c'),
-        'courses'      => rows($conn, "SELECT code, name, status FROM courses"),
-        'course_years' => rows($conn, "SELECT c.code AS course_code, cy.year_level FROM course_years cy JOIN courses c ON c.id = cy.course_id"),
-        'sections'     => rows($conn, "SELECT c.code AS course_code, cy.year_level, s.name FROM sections s JOIN course_years cy ON cy.id = s.course_year_id JOIN courses c ON c.id = cy.course_id"),
-        'students'     => rows($conn, "SELECT student_id, first_name, last_name, course, section, year_level, status FROM students"),
-        'settings'     => rows($conn, "SELECT setting_key, setting_value FROM settings"),
-    ];
-    header('Content-Type: application/json; charset=utf-8');
-    header('Content-Disposition: attachment; filename="StudentRecords_Backup_' . date('Y-m-d_Hi') . '.json"');
-    echo json_encode($backup, JSON_PRETTY_PRINT);
-    exit;
-}
-
-function set_flash($type, $msg) {
-    $_SESSION['flash'] = [$type, $msg];
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -109,6 +140,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $stmt->close();
             set_flash('success', 'System settings saved.');
+
+        } elseif ($action === 'create_backup') {
+            $tab = 'backup';
+            if (!is_dir(BACKUP_DIR) && !@mkdir(BACKUP_DIR, 0750, true)) {
+                set_flash('error', 'The backup folder is missing. Ask your administrator to create ' . BACKUP_DIR . '.');
+            } else {
+                $name = 'StudentRecords_Backup_' . date('Y-m-d_His') . '.json';
+                $json = json_encode(build_backup($conn), JSON_PRETTY_PRINT);
+                if (file_put_contents(BACKUP_DIR . '/' . $name, $json) === false) {
+                    set_flash('error', 'Could not save the backup. Check the folder permissions.');
+                } else {
+                    set_flash('success', 'Backup created: ' . $name);
+                }
+            }
+
+        } elseif ($action === 'delete_backup') {
+            $tab = 'backup';
+            $name = basename((string)($_POST['file'] ?? ''));
+            $path = BACKUP_DIR . '/' . $name;
+            if (valid_backup_name($name) && is_file($path) && unlink($path)) {
+                set_flash('success', 'Backup deleted.');
+            } else {
+                set_flash('error', 'Could not delete that backup.');
+            }
 
         } elseif ($action === 'restore') {
             $tab = 'backup';
@@ -177,6 +232,7 @@ unset($_SESSION['flash']);
 
 $me = rows($conn, "SELECT username, full_name, email FROM users WHERE id = ?", 'i', [$uid])[0];
 $fullName = $me['full_name'] ?: $me['username'];
+$backups = $tab === 'backup' ? backup_files() : [];
 ?>
 <!DOCTYPE html>
 <html>
@@ -185,6 +241,7 @@ $fullName = $me['full_name'] ?: $me['username'];
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Settings - Student Records</title>
     <link rel="stylesheet" href="style.css">
+    <script src="theme.js"></script>
 </head>
 <body class="app">
 
@@ -225,6 +282,7 @@ $fullName = $me['full_name'] ?: $me['username'];
 
     <div class="main">
         <header class="topbar">
+            <?php render_notifications($conn); ?>
             <div class="user-menu">
                 <span class="avatar"><?= htmlspecialchars(strtoupper(substr($_SESSION['username'], 0, 1))) ?></span>
                 <strong><?= htmlspecialchars($_SESSION['username']) ?></strong>
@@ -304,6 +362,14 @@ $fullName = $me['full_name'] ?: $me['username'];
                         <h2>System Settings</h2>
                         <p>Configure general system preferences and application behavior.</p>
                     </div>
+                    <div class="setting-row">
+                        <div><strong>System Theme</strong><span>Choose the appearance. This applies in this browser.</span></div>
+                        <div class="theme-buttons">
+                            <button type="button" class="theme-btn" data-theme-choice="light">Light</button>
+                            <button type="button" class="theme-btn" data-theme-choice="dark">Dark</button>
+                            <button type="button" class="theme-btn" data-theme-choice="system">System</button>
+                        </div>
+                    </div>
                     <form method="post">
                         <input type="hidden" name="action" value="system">
                         <div class="setting-row">
@@ -315,7 +381,7 @@ $fullName = $me['full_name'] ?: $me['username'];
                             <input type="text" name="academic_term" value="<?= htmlspecialchars($cfg['academic_term']) ?>">
                         </div>
                         <div class="setting-row">
-                            <div><strong>Grading Scale</strong><span>The grade range and equivalent description.</span></div>
+                            <div><strong>Grading Scale</strong><span>Saved for future grade reports. Not used yet.</span></div>
                             <input type="text" name="grading_scale" value="<?= htmlspecialchars($cfg['grading_scale']) ?>">
                         </div>
                         <div class="setting-row">
@@ -323,7 +389,7 @@ $fullName = $me['full_name'] ?: $me['username'];
                             <input type="text" name="student_id_format" value="<?= htmlspecialchars($cfg['student_id_format']) ?>">
                         </div>
                         <div class="setting-row">
-                            <div><strong>Notifications</strong><span>Enable or disable system notifications.</span></div>
+                            <div><strong>Notifications</strong><span>Show the bell in the top bar with alerts for the system.</span></div>
                             <label class="switch">
                                 <input type="checkbox" name="notifications" value="1" <?= $cfg['notifications'] === '1' ? 'checked' : '' ?>>
                                 <span class="slider"></span>
@@ -341,12 +407,13 @@ $fullName = $me['full_name'] ?: $me['username'];
                         <p>Create a backup of your data or restore the system from a backup file.</p>
                     </div>
                     <div class="backup-grid">
-                        <div class="backup-card blue">
+                        <form method="post" class="backup-card blue">
+                            <input type="hidden" name="action" value="create_backup">
                             <svg viewBox="0 0 24 24" fill="none" stroke="#1f5fd6" stroke-width="1.8" class="big-icon"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
                             <h3>Backup Data</h3>
-                            <p>Create a backup copy of the student records, courses, and system settings.</p>
-                            <a href="settings.php?action=backup" class="btn-primary wide">Create Backup</a>
-                        </div>
+                            <p>Save a backup copy of the student records, courses, and system settings.</p>
+                            <button type="submit" class="btn-primary wide">Create Backup</button>
+                        </form>
                         <form method="post" enctype="multipart/form-data" class="backup-card green" onsubmit="return confirm('Restore this backup? Records in the file that are missing will be added. Existing records are kept.');">
                             <input type="hidden" name="action" value="restore">
                             <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.8" class="big-icon"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
@@ -356,6 +423,38 @@ $fullName = $me['full_name'] ?: $me['username'];
                             <button type="submit" class="btn-restore wide">Restore</button>
                         </form>
                     </div>
+
+                    <div class="panel-divider"></div>
+                    <div class="panel-head">
+                        <h2>Backup History</h2>
+                        <p>List of recent backup files.</p>
+                    </div>
+                    <table class="history">
+                        <thead><tr><th>File Name</th><th>Date Created</th><th>File Size</th><th>Actions</th></tr></thead>
+                        <tbody>
+                        <?php if (!$backups): ?>
+                            <tr><td colspan="4" class="empty">No backups yet. Click "Create Backup" to make one.</td></tr>
+                        <?php endif; ?>
+                        <?php foreach ($backups as $file):
+                            $name = basename($file); ?>
+                            <tr>
+                                <td><?= htmlspecialchars($name) ?></td>
+                                <td><?= date('M d, Y g:i A', filemtime($file)) ?></td>
+                                <td><?= human_size(filesize($file)) ?></td>
+                                <td>
+                                    <div class="actions">
+                                        <a href="settings.php?download=<?= urlencode($name) ?>" class="btn-view">Download</a>
+                                        <form method="post" class="inline" onsubmit="return confirm('Delete this backup file?');">
+                                            <input type="hidden" name="action" value="delete_backup">
+                                            <input type="hidden" name="file" value="<?= htmlspecialchars($name) ?>">
+                                            <button type="submit" class="btn-delete">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
 
                 <?php else: ?>
                     <div class="panel-head">
@@ -385,5 +484,14 @@ $fullName = $me['full_name'] ?: $me['username'];
             </div>
         </main>
     </div>
+
+    <script>
+        const current = window.getThemeChoice();
+        const mark = () => document.querySelectorAll('[data-theme-choice]').forEach(b =>
+            b.classList.toggle('active', b.dataset.themeChoice === window.getThemeChoice()));
+        document.querySelectorAll('[data-theme-choice]').forEach(b =>
+            b.addEventListener('click', () => { window.setThemeChoice(b.dataset.themeChoice); mark(); }));
+        mark();
+    </script>
 </body>
 </html>
