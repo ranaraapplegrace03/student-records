@@ -290,11 +290,11 @@ function page_url($p, $search) {
             </div>
             <form method="post" class="modal-form">
                 <input type="hidden" name="action" value="add">
-                <label>Student ID <input type="text" name="student_id" required></label>
-                <label>Year Level <select name="year_level" id="add-year_level" required></select></label>
+                <label class="full">Student ID <input type="text" name="student_id" required></label>
                 <label>First Name <input type="text" name="first_name" required></label>
                 <label>Last Name <input type="text" name="last_name" required></label>
-                <label>Course <select name="course" id="add-course" required></select></label>
+                <label class="full">Course <select name="course" id="add-course" required></select></label>
+                <label>Year Level <select name="year_level" id="add-year_level" required></select></label>
                 <label>Section <select name="section" id="add-section" required></select></label>
                 <div class="modal-actions">
                     <button type="button" class="btn-ghost" data-close>Cancel</button>
