@@ -242,6 +242,7 @@ $backups = $tab === 'backup' ? backup_files() : [];
     <title>Settings - Student Records</title>
     <link rel="stylesheet" href="style.css">
     <script src="theme.js"></script>
+    <script src="sidebar.js"></script>
     <script src="toast.js"></script>
 </head>
 <body class="app">
