@@ -24,6 +24,19 @@ function ordinal($n) {
 function year_label($n) {
     return ordinal($n) . ' Year';
 }
+function summarize_years($years, $sectionCount) {
+    $n = count($years);
+    if ($n === 0) return 'No year levels yet';
+    $secText = $sectionCount . ($sectionCount === 1 ? ' section' : ' sections');
+    $levels = array_map(fn($y) => (int)$y['year'], array_values($years));
+    sort($levels);
+    if ($n === 1) return ordinal($levels[0]) . ' Year (' . $secText . ')';
+    $contiguous = ($levels[$n - 1] - $levels[0]) === $n - 1;
+    $range = $contiguous
+        ? ordinal($levels[0]) . ' - ' . ordinal($levels[$n - 1]) . ' Year'
+        : implode(', ', array_map('ordinal', $levels)) . ' Year';
+    return $range . ' (' . $secText . ')';
+}
 function set_flash($type, $msg) {
     $_SESSION['flash'] = [$type, $msg];
 }
@@ -68,14 +81,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         } elseif ($action === 'add_year') {
             $year = (int)($_POST['year_level'] ?? 0);
-            if ($courseId && $year >= 1 && $year <= 6) {
+            if ($courseId && $year >= 1 && $year <= 4) {
                 $stmt = $conn->prepare("INSERT INTO course_years (course_id, year_level) VALUES (?, ?)");
                 $stmt->bind_param("ii", $courseId, $year);
                 $stmt->execute();
                 $stmt->close();
                 set_flash('success', 'Year level added.');
             } else {
-                set_flash('error', 'Please choose a year level from 1 to 6.');
+                set_flash('error', 'Please choose a year level from 1st to 4th Year.');
             }
 
         } elseif ($action === 'delete_year') {
@@ -269,9 +282,7 @@ function page_url($p, $search, $status) {
                         $years = $yearsBy[$c['id']] ?? [];
                         $sectionCount = 0;
                         foreach ($years as $y) { $sectionCount += count($y['sections']); }
-                        $summary = count($years)
-                            ? count($years) . ' year levels, ' . $sectionCount . ' sections'
-                            : 'No year levels yet';
+                        $summary = summarize_years($years, $sectionCount);
                         $editJson = htmlspecialchars(json_encode($c), ENT_QUOTES);
                         $viewJson = htmlspecialchars(json_encode([
                             'code' => $c['code'], 'name' => $c['name'], 'status' => $c['status'],
@@ -430,7 +441,7 @@ function page_url($p, $search, $status) {
                 <input type="hidden" name="open" id="year-open">
                 <label class="full">Year Level
                     <select name="year_level">
-                        <?php for ($y = 1; $y <= 6; $y++): ?><option value="<?= $y ?>"><?= year_label($y) ?></option><?php endfor; ?>
+                        <?php for ($y = 1; $y <= 4; $y++): ?><option value="<?= $y ?>"><?= year_label($y) ?></option><?php endfor; ?>
                     </select>
                 </label>
                 <div class="modal-actions">
