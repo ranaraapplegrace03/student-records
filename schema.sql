@@ -19,9 +19,16 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL
 );
 
--- Account details for the Settings page
+-- Account details
 ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(100) NULL;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(50) NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(50) NULL;
+
+-- Password reset codes
+ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code_hash VARCHAR(255) NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_expires DATETIME NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_attempts INT NOT NULL DEFAULT 0;
 
 -- Courses, year levels, and sections
 CREATE TABLE IF NOT EXISTS courses (
