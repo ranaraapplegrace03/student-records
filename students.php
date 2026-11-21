@@ -5,6 +5,8 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/catalog.php';
+$catalog = load_catalog($conn);
 
 function rows($conn, $sql, $types = '', $params = []) {
     $stmt = $conn->prepare($sql);
@@ -275,14 +277,14 @@ function page_url($p, $search, $level) {
                 <input type="hidden" name="action" value="add">
                 <label>Student ID <input type="text" name="student_id" required></label>
                 <label>Year Level
-                    <select name="year_level">
+                    <select name="year_level" id="add-year_level" required>
                         <?php for ($y = 1; $y <= 6; $y++): ?><option value="<?= $y ?>">Year <?= $y ?></option><?php endfor; ?>
                     </select>
                 </label>
                 <label>First Name <input type="text" name="first_name" required></label>
                 <label>Last Name <input type="text" name="last_name" required></label>
-                <label>Course <input type="text" name="course"></label>
-                <label>Section <input type="text" name="section"></label>
+                <label>Course <select name="course" id="add-course" required></select></label>
+                <label>Section <select name="section" id="add-section" required></select></label>
                 <label>Status
                     <select name="status"><option>Active</option><option>Inactive</option></select>
                 </label>
@@ -313,8 +315,8 @@ function page_url($p, $search, $level) {
                 </label>
                 <label>First Name <input type="text" name="first_name" id="edit-first_name" required></label>
                 <label>Last Name <input type="text" name="last_name" id="edit-last_name" required></label>
-                <label>Course <input type="text" name="course" id="edit-course"></label>
-                <label>Section <input type="text" name="section" id="edit-section"></label>
+                <label>Course <select name="course" id="edit-course" required></select></label>
+                <label>Section <select name="section" id="edit-section" required></select></label>
                 <label>Status
                     <select name="status" id="edit-status"><option>Active</option><option>Inactive</option></select>
                 </label>
@@ -349,12 +351,17 @@ function page_url($p, $search, $level) {
         </div>
     </div>
 
+    <script>window.CATALOG = <?= json_encode($catalog, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;</script>
+    <script src="catalog.js"></script>
     <script>
         const show = id => document.getElementById(id).hidden = false;
         const hide = modal => modal.hidden = true;
         const set = (id, value) => document.getElementById(id).value = value;
         const text = (id, value) => document.getElementById(id).textContent = value;
 
+        const ADD = setupCascade('add-course', 'add-year_level', 'add-section');
+        const EDIT = setupCascade('edit-course', 'edit-year_level', 'edit-section');
+        ADD.reset();
         document.querySelectorAll('[data-open]').forEach(btn =>
             btn.addEventListener('click', () => show(btn.dataset.open)));
 
@@ -365,12 +372,10 @@ function page_url($p, $search, $level) {
                 set('edit-student_id', r.student_id);
                 set('edit-first_name', r.first_name);
                 set('edit-last_name', r.last_name);
-                set('edit-course', r.course || '');
-                set('edit-section', r.section || '');
-                set('edit-year_level', r.year_level);
                 set('edit-status', r.status || 'Active');
                 set('edit-average', r.average === null ? '' : r.average);
-                show('editModal');
+                EDIT.preset(r.course || '', r.year_level, r.section || '');
+        show('editModal');
             }));
 
         document.querySelectorAll('[data-view]').forEach(btn =>
