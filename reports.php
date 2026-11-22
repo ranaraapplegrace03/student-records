@@ -155,6 +155,7 @@ $exportUrl = 'reports.php?' . http_build_query(array_merge(['export' => 'csv'], 
     <link rel="stylesheet" href="style.css">
     <script src="theme.js"></script>
     <script src="sidebar.js"></script>
+    <script src="logout-confirm.js"></script>
 </head>
 <body class="app">
 
@@ -181,6 +182,10 @@ $exportUrl = 'reports.php?' . http_build_query(array_merge(['export' => 'csv'], 
             <a href="reports.php" class="active">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
                 Reports
+            </a>
+            <a href="users.php">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+                Users
             </a>
             <a href="settings.php">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
