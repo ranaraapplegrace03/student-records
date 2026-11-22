@@ -791,3 +791,18 @@ table { min-width: 620px; }
   .brand p { font-size: 18px; }
   .login-card { width: 560px; padding: 24px 36px; }
 }
+
+/* ---------- Login page: slightly taller card, title moved down a little ---------- */
+@media (min-width: 901px) {
+  .brand { top: 90px; }
+  .login-card { padding: 34px 44px; }
+  .login-card .cap { margin-bottom: 8px; }
+  .login-card .sub { margin: 6px 0 24px; }
+  .login-card .field { height: 56px; margin-bottom: 14px; }
+  .login-card .login-btn, .login-card .secondary-btn { height: 56px; }
+  .login-card .divider { margin: 18px 0; }
+}
+@media (min-width: 901px) and (max-width: 1280px) {
+  .brand { top: 70px; }
+  .login-card { padding: 30px 36px; }
+}
