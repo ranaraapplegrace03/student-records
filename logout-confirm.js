@@ -26,7 +26,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         var modal = buildModal();
 
-        document.querySelectorAll('a[href="logout.php"]').forEach(function (link) {
+        document.querySelectorAll('a[href="logout.php"]:not(.logout-confirm)').forEach(function (link) {
             link.addEventListener('click', function (e) {
                 e.preventDefault();
                 modal.hidden = false;
