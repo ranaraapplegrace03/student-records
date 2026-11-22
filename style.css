@@ -806,3 +806,21 @@ table { min-width: 620px; }
   .brand { top: 70px; }
   .login-card { padding: 30px 36px; }
 }
+
+/* ---------- Log out confirmation ---------- */
+.logout-box { text-align: center; max-width: 420px; }
+.logout-icon {
+  width: 64px; height: 64px; border-radius: 50%; background: #fde8e8; color: #c62828;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
+}
+.logout-icon svg { width: 30px; height: 30px; }
+.logout-box h3 { margin: 0 0 8px; font-size: 22px; color: #0b1f4a; }
+.logout-box p { margin: 0 0 22px; color: #5b6478; font-size: 15px; }
+.logout-box .modal-actions { justify-content: center; margin-top: 0; }
+.logout-confirm {
+  background: #dc2626; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+}
+.logout-confirm:hover { background: #b91c1c; }
+html[data-theme="dark"] .logout-box h3 { color: #f1f5f9; }
+html[data-theme="dark"] .logout-box p { color: #94a3b8; }
+html[data-theme="dark"] .logout-icon { background: #7f1d1d; color: #fecaca; }
