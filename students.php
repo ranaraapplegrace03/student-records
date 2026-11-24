@@ -208,7 +208,7 @@ function page_url($p, $search, $level) {
                 </form>
                 <select form="filterForm" name="level" class="filter-select" onchange="this.form.submit()">
                     <option value="0">Year Level: All</option>
-                    <?php for ($y = 1; $y <= 6; $y++): ?>
+                    <?php for ($y = 1; $y <= 4; $y++): ?>
                         <option value="<?= $y ?>" <?= $level === $y ? 'selected' : '' ?>>Year <?= $y ?></option>
                     <?php endfor; ?>
                 </select>
